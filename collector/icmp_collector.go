@@ -14,7 +14,14 @@ import (
 )
 
 const (
-	namespace = "ping_"
+	namespace       = "ping_"
+	defaultTimeout  = time.Second * 10
+	defaultInterval = time.Second
+	defaultCount    = 5
+	defaultSize     = 56
+	defaultTTL      = 64
+	protoDefault    = "ip4:icmp"
+	maxPacketSize   = 1024
 )
 
 var (
@@ -44,124 +51,112 @@ var (
 	})
 )
 
-func PingHandler(w http.ResponseWriter, r *http.Request) {
-	params := r.URL.Query()
-	target := params.Get("target")
-	timeout := time.Second * 10
-	interval := time.Second
-	count := 5
-	size := 56
-	ttl := 64
-	proto := "ip4:icmp"
-	for k, v := range params {
-		k = strings.ToLower(k)
-		if k == "target" {
-			target = v[0]
-		}
-		if k == "timeout" {
-			if strings.HasSuffix(v[0], "s") {
-				value, err := time.ParseDuration(v[0])
-				if err != nil {
-					log.Error(err)
-				}
-				timeout = value
-			} else {
-				log.Errorf("expecting time duration in seconds example: 5s - got: %v", v[0])
-			}
-		}
-		if k == "interval" {
-			if strings.HasSuffix(v[0], "s") {
-				value, err := time.ParseDuration(v[0])
-				if err != nil {
-					log.Error(err)
-				}
-				interval = value
-			} else {
-				log.Warnf("expecting time duration in seconds example: 5s - got: %v - using 1s default", v[0])
-			}
-		}
-		if k == "count" {
-			value, err := strconv.Atoi(v[0])
-			if err != nil {
-				log.Error(err)
-			}
-			if value > 0 {
-				count = value
-			}
-		}
-		if k == "size" {
-			value, err := strconv.Atoi(v[0])
-			if err != nil {
-				log.Error(err)
-			}
-			if value < 1024 {
-				size = value
-			}
-		}
-		if k == "ttl" {
-			value, err := strconv.Atoi(v[0])
-			if err != nil {
-				log.Error(err)
-			}
-			ttl = value
-		}
-		if k == "proto" {
-			value := strings.ToLower(v[0])
-			proto = value
-		}
+type pingParams struct {
+	target   string
+	timeout  time.Duration
+	interval time.Duration
+	count    int
+	size     int
+	ttl      int
+	proto    string
+}
 
+func parseParams(r *http.Request) pingParams {
+	params := r.URL.Query()
+	p := pingParams{
+		target:   params.Get("target"),
+		timeout:  defaultTimeout,
+		interval: defaultInterval,
+		count:    defaultCount,
+		size:     defaultSize,
+		ttl:      defaultTTL,
+		proto:    protoDefault,
 	}
 
-	start := time.Now()
-	registry := prometheus.NewRegistry()
-	registry.MustRegister(probeDurationGauge)
-	registry.MustRegister(minGauge)
-	registry.MustRegister(maxGauge)
-	registry.MustRegister(avgGauge)
-	registry.MustRegister(stddevGauge)
-	registry.MustRegister(lossGauge)
+	for k, v := range params {
+		switch strings.ToLower(k) {
+		case "target":
+			p.target = v[0]
+		case "timeout":
+			if duration, err := time.ParseDuration(v[0]); err == nil {
+				p.timeout = duration
+			} else {
+				log.Errorf("Expected duration in seconds (e.g., 5s). Got: %v", v[0])
+			}
+		case "interval":
+			if duration, err := time.ParseDuration(v[0]); err == nil {
+				p.interval = duration
+			} else {
+				log.Warnf("Expected duration in seconds (e.g., 5s). Got: %v. Using default 1s.", v[0])
+			}
+		case "count":
+			if count, err := strconv.Atoi(v[0]); err == nil && count > 0 {
+				p.count = count
+			}
+		case "size":
+			if size, err := strconv.Atoi(v[0]); err == nil && size < maxPacketSize {
+				p.size = size
+			}
+		case "ttl":
+			if ttl, err := strconv.Atoi(v[0]); err == nil {
+				p.ttl = ttl
+			}
+		case "proto":
+			p.proto = strings.ToLower(v[0])
+		}
+	}
 
-	ra, err := net.ResolveIPAddr(proto, target)
+	return p
+}
+
+func serveMetricsWithError(w http.ResponseWriter, r *http.Request, registry *prometheus.Registry) {
+	if h := promhttp.HandlerFor(registry, promhttp.HandlerOpts{}); h != nil {
+		h.ServeHTTP(w, r)
+	}
+}
+
+func PingHandler(w http.ResponseWriter, r *http.Request) {
+	p := parseParams(r)
+	start := time.Now()
+
+	registry := prometheus.NewRegistry()
+	registry.MustRegister(probeDurationGauge, minGauge, maxGauge, avgGauge, stddevGauge, lossGauge)
+
+	// TODO: ensure ResolveIPAddr is the best way to do lookups
+	ra, err := net.ResolveIPAddr(p.proto, p.target)
 	if err != nil {
 		log.Error(err)
-		h := promhttp.HandlerFor(registry, promhttp.HandlerOpts{})
-		h.ServeHTTP(w, r)
+		serveMetricsWithError(w, r, registry)
 		return
 	}
 
 	pinger, err := probing.NewPinger(ra.IP.String())
 	if err != nil {
 		log.Error(err)
-		h := promhttp.HandlerFor(registry, promhttp.HandlerOpts{})
-		h.ServeHTTP(w, r)
+		serveMetricsWithError(w, r, registry)
 		return
 	}
 
-	pinger.Count = count
-	pinger.Size = size
-	pinger.Interval = interval
-	pinger.Timeout = timeout
-	pinger.TTL = ttl
+	pinger.Count = p.count
+	pinger.Size = p.size
+	pinger.Interval = p.interval
+	pinger.Timeout = p.timeout
+	pinger.TTL = p.ttl
 	pinger.SetPrivileged(false)
 
-	err = pinger.Run()
-	if err != nil {
+	if err := pinger.Run(); err != nil {
 		log.Error(err)
-		h := promhttp.HandlerFor(registry, promhttp.HandlerOpts{})
-		h.ServeHTTP(w, r)
+		serveMetricsWithError(w, r, registry)
 		return
-	} else {
-		stats := pinger.Statistics()
-
-		minGauge.Set(stats.MinRtt.Seconds())
-		avgGauge.Set(stats.AvgRtt.Seconds())
-		maxGauge.Set(stats.MaxRtt.Seconds())
-		stddevGauge.Set(float64(stats.StdDevRtt))
-		lossGauge.Set(stats.PacketLoss)
-
-		duration := time.Since(start).Seconds()
-		probeDurationGauge.Set(duration)
 	}
-	h := promhttp.HandlerFor(registry, promhttp.HandlerOpts{})
-	h.ServeHTTP(w, r)
+
+	stats := pinger.Statistics()
+	minGauge.Set(stats.MinRtt.Seconds())
+	avgGauge.Set(stats.AvgRtt.Seconds())
+	maxGauge.Set(stats.MaxRtt.Seconds())
+	stddevGauge.Set(float64(stats.StdDevRtt))
+	lossGauge.Set(stats.PacketLoss)
+	probeDurationGauge.Set(time.Since(start).Seconds())
+
+	serveMetricsWithError(w, r, registry)
 }
