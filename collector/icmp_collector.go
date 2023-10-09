@@ -20,8 +20,10 @@ const (
 	defaultCount    = 5
 	defaultSize     = 56
 	defaultTTL      = 64
-	protoDefault    = "ip4:icmp"
+	defaultProtocol = "ip4"  // or ip6
+	defaultPacket   = "icmp" // or udp
 	maxPacketSize   = 1024
+	minPacketSize   = 24
 )
 
 var (
@@ -58,11 +60,13 @@ type pingParams struct {
 	count    int
 	size     int
 	ttl      int
-	proto    string
+	protocol string
+	packet   string
 }
 
 func parseParams(r *http.Request) pingParams {
 	params := r.URL.Query()
+
 	p := pingParams{
 		target:   params.Get("target"),
 		timeout:  defaultTimeout,
@@ -70,9 +74,11 @@ func parseParams(r *http.Request) pingParams {
 		count:    defaultCount,
 		size:     defaultSize,
 		ttl:      defaultTTL,
-		proto:    protoDefault,
+		protocol: defaultProtocol,
+		packet:   defaultPacket,
 	}
 
+	log.Debug("Parsing params", params)
 	for k, v := range params {
 		switch strings.ToLower(k) {
 		case "target":
@@ -92,18 +98,35 @@ func parseParams(r *http.Request) pingParams {
 		case "count":
 			if count, err := strconv.Atoi(v[0]); err == nil && count > 0 {
 				p.count = count
+			} else {
+				p.count = defaultCount
 			}
 		case "size":
-			if size, err := strconv.Atoi(v[0]); err == nil && size < maxPacketSize {
+			if size, err := strconv.Atoi(v[0]); err == nil && size < maxPacketSize && size > minPacketSize {
 				p.size = size
+			} else {
+				p.size = defaultSize
 			}
 		case "ttl":
 			if ttl, err := strconv.Atoi(v[0]); err == nil {
 				p.ttl = ttl
+			} else {
+				p.ttl = defaultTTL
 			}
-		case "proto":
-			p.proto = strings.ToLower(v[0])
+		case "protocol":
+			if strings.ToLower(v[0]) != "" {
+				p.protocol = strings.ToLower(v[0])
+			} else {
+				p.protocol = defaultProtocol
+			}
+		case "packet":
+			if strings.ToLower(v[0]) != "" {
+				p.packet = strings.ToLower(v[0])
+			} else {
+				p.packet = defaultPacket
+			}
 		}
+
 	}
 
 	return p
@@ -122,8 +145,11 @@ func PingHandler(w http.ResponseWriter, r *http.Request) {
 	registry := prometheus.NewRegistry()
 	registry.MustRegister(probeDurationGauge, minGauge, maxGauge, avgGauge, stddevGauge, lossGauge)
 
+	log.Debug("Request received for", p.packet, r)
+
 	// TODO: ensure ResolveIPAddr is the best way to do lookups
-	ra, err := net.ResolveIPAddr(p.proto, p.target)
+	// TODO: fails with IP address
+	ra, err := net.ResolveIPAddr(p.protocol, p.target)
 	if err != nil {
 		log.Error(err)
 		serveMetricsWithError(w, r, registry)
@@ -142,7 +168,12 @@ func PingHandler(w http.ResponseWriter, r *http.Request) {
 	pinger.Interval = p.interval
 	pinger.Timeout = p.timeout
 	pinger.TTL = p.ttl
-	pinger.SetPrivileged(false)
+
+	if p.protocol == "icmp" {
+		pinger.SetPrivileged(true)
+	} else { // udp
+		pinger.SetPrivileged(false)
+	}
 
 	if err := pinger.Run(); err != nil {
 		log.Error(err)
