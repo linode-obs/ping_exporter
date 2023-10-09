@@ -147,7 +147,7 @@ func PingHandler(w http.ResponseWriter, r *http.Request) {
 	log.Debug("Request received with parameters ", p)
 
 	// TODO: ensure ResolveIPAddr is the best way to do lookups
-	// TODO: fails with IP address
+	// TODO: fails with IP address as target
 	ra, err := net.ResolveIPAddr(p.protocol, p.target)
 	if err != nil {
 		log.Error(err)
@@ -170,7 +170,7 @@ func PingHandler(w http.ResponseWriter, r *http.Request) {
 
 	if p.protocol == "icmp" {
 		pinger.SetPrivileged(true)
-	} else { // udp
+	} else {
 		pinger.SetPrivileged(false)
 	}
 

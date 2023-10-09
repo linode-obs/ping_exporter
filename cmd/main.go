@@ -6,23 +6,15 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
-	"github.com/wbollock/ping_exporter/internal/collector"
+	"github.com/wbollock/ping_exporter/internal/server"
 )
 
 const (
-	version     = "0.1.0"
-	defaultHTML = `<html>
-			<head><title>Ping Exporter</title></head>
-			<body>
-			<h1>Ping Exporter</h1>
-			<p><a href='%s'>Metrics</a></p>
-			</body>
-			</html>`
+	version              = "0.1.0"
+	defaultLogLevel      = "info"
 	defaultListenAddress = ":9141"
 	defaultMetricsPath   = "/metrics"
-	defaultLogLevel      = "info"
 )
 
 var (
@@ -35,14 +27,6 @@ var (
 
 func printVersion() {
 	fmt.Printf("ping_exporter\nVersion: %s\nmulti-target ICMP prometheus exporter\n", version)
-}
-
-func mainPage(w http.ResponseWriter, r *http.Request) {
-	response := fmt.Sprintf(defaultHTML, *metricsPath)
-	_, err := w.Write([]byte(response))
-	if err != nil {
-		log.WithError(err).Error("Failed to write main page response")
-	}
 }
 
 func main() {
@@ -61,13 +45,10 @@ func main() {
 		log.SetLevel(log.InfoLevel)
 	}
 
-	log.Info("Listening on address ", *listenAddress)
+	handler := server.SetupServer(*metricsPath)
 
-	http.Handle(*metricsPath, promhttp.Handler())
-	http.HandleFunc("/probe", collector.PingHandler)
-	http.HandleFunc("/", mainPage)
-
-	if err := http.ListenAndServe(*listenAddress, nil); err != nil {
+	log.Infof("Starting server on %s", *listenAddress)
+	if err := http.ListenAndServe(*listenAddress, handler); err != nil {
 		log.WithError(err).Fatal("Failed to start the server")
 	}
 }
