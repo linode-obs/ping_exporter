@@ -1,4 +1,4 @@
-package main
+package collector
 
 import (
 	"net"
@@ -44,7 +44,7 @@ var (
 	})
 )
 
-func pingHandler(w http.ResponseWriter, r *http.Request) {
+func PingHandler(w http.ResponseWriter, r *http.Request) {
 	params := r.URL.Query()
 	target := params.Get("target")
 	timeout := time.Second * 10

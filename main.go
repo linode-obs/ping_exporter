@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/wbollock/ping_exporter/collector"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -23,8 +24,7 @@ var (
 func printVersion() {
 	fmt.Println("ping_exporter")
 	fmt.Printf("Version: %s\n", version)
-	fmt.Println("Author(s): Adam Rambo")
-	fmt.Println("multi-target icmp exporter ICMP")
+	fmt.Println("multi-target ICMP prometheus exporter")
 }
 
 func main() {
@@ -38,7 +38,7 @@ func main() {
 	log.Info("Listening on ", *listenAddress)
 	http.Handle(*metricsPath, promhttp.Handler())
 	http.HandleFunc(("/probe"), func(w http.ResponseWriter, r *http.Request) {
-		pingHandler(w, r)
+		collector.PingHandler(w, r)
 	})
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		_, err := w.Write([]byte(`<html>
