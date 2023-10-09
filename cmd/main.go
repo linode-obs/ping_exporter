@@ -8,7 +8,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
-	"github.com/wbollock/ping_exporter/collector"
+	"github.com/wbollock/ping_exporter/internal/collector"
 )
 
 const (

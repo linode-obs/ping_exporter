@@ -78,7 +78,6 @@ func parseParams(r *http.Request) pingParams {
 		packet:   defaultPacket,
 	}
 
-	log.Debug("Parsing params", params)
 	for k, v := range params {
 		switch strings.ToLower(k) {
 		case "target":
@@ -145,7 +144,7 @@ func PingHandler(w http.ResponseWriter, r *http.Request) {
 	registry := prometheus.NewRegistry()
 	registry.MustRegister(probeDurationGauge, minGauge, maxGauge, avgGauge, stddevGauge, lossGauge)
 
-	log.Debug("Request received for", p.packet, r)
+	log.Debug("Request received with parameters ", p)
 
 	// TODO: ensure ResolveIPAddr is the best way to do lookups
 	// TODO: fails with IP address
