@@ -19,7 +19,6 @@ const (
 
 var (
 	listenAddress = flag.String("web.listen-address", defaultListenAddress, "Address to listen on for telemetry")
-	metricsPath   = flag.String("web.telemetry-path", defaultMetricsPath, "Path under which to expose metrics")
 	showVersion   = flag.Bool("version", false, "show version information")
 	logLevel      = flag.String("log.level", defaultLogLevel,
 		"Minimum Log level [debug, info]")
@@ -45,7 +44,7 @@ func main() {
 		log.SetLevel(log.InfoLevel)
 	}
 
-	handler := server.SetupServer(*metricsPath)
+	handler := server.SetupServer()
 
 	log.Infof("Starting server on %s", *listenAddress)
 	if err := http.ListenAndServe(*listenAddress, handler); err != nil {

@@ -20,13 +20,13 @@ const (
 	defaultMetricsPath = "/metrics"
 )
 
-func SetupServer(metricsPath string) http.Handler {
+func SetupServer() http.Handler {
 	mux := http.NewServeMux()
 
-	mux.Handle(metricsPath, promhttp.Handler())
+	mux.Handle(defaultMetricsPath, promhttp.Handler())
 	mux.HandleFunc("/probe", collector.PingHandler)
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		response := fmt.Sprintf(defaultHTML, metricsPath)
+		response := fmt.Sprintf(defaultHTML, defaultMetricsPath)
 		_, err := w.Write([]byte(response))
 		if err != nil {
 			log.WithError(err).Error("Failed to write main page response")
