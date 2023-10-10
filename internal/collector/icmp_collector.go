@@ -105,10 +105,11 @@ func parseParams(r *http.Request) pingParams {
 				p.count = defaultCount
 			}
 		case "size":
-			if size, err := strconv.Atoi(v[0]); err == nil && size < maxPacketSize && size > minPacketSize {
+			if size, err := strconv.Atoi(v[0]); err == nil && size <= maxPacketSize && size >= minPacketSize {
 				p.size = size
 			} else {
 				p.size = defaultSize
+				log.Warnf("Received request for illegal packet size %v, reducing to %v", size, defaultSize)
 			}
 		case "ttl":
 			if ttl, err := strconv.Atoi(v[0]); err == nil {
