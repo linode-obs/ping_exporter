@@ -1,7 +1,6 @@
 package collector
 
 import (
-	"net"
 	"net/http"
 	"strconv"
 	"strings"
@@ -151,16 +150,7 @@ func PingHandler(w http.ResponseWriter, r *http.Request) {
 
 	log.Debug("Request received with parameters ", p)
 
-	// TODO: ensure ResolveIPAddr is the best way to do lookups
-	// TODO: fails with IP address as target
-	ra, err := net.ResolveIPAddr(p.protocol, p.target)
-	if err != nil {
-		log.Error(err)
-		serveMetricsWithError(w, r, registry)
-		return
-	}
-
-	pinger, err := probing.NewPinger(ra.IP.String())
+	pinger, err := probing.NewPinger(p.target)
 	if err != nil {
 		log.Error(err)
 		serveMetricsWithError(w, r, registry)
