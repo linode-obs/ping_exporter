@@ -27,6 +27,10 @@ const (
 )
 
 var (
+	pingSuccessGauge = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: namespace + "success",
+		Help: "Returns whether the ping succeeded",
+	})
 	probeDurationGauge = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: namespace + "duration_seconds",
 		Help: "Returns how long the probe took to complete in seconds",
@@ -142,7 +146,7 @@ func PingHandler(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 
 	registry := prometheus.NewRegistry()
-	registry.MustRegister(probeDurationGauge, minGauge, maxGauge, avgGauge, stddevGauge, lossGauge)
+	registry.MustRegister(pingSuccessGauge, probeDurationGauge, minGauge, maxGauge, avgGauge, stddevGauge, lossGauge)
 
 	log.Debug("Request received with parameters ", p)
 
@@ -177,10 +181,12 @@ func PingHandler(w http.ResponseWriter, r *http.Request) {
 	if err := pinger.Run(); err != nil {
 		log.Error(err)
 		serveMetricsWithError(w, r, registry)
+		pingSuccessGauge.Set(0)
 		return
 	}
 
 	stats := pinger.Statistics()
+	pingSuccessGauge.Set(1)
 	minGauge.Set(stats.MinRtt.Seconds())
 	avgGauge.Set(stats.AvgRtt.Seconds())
 	maxGauge.Set(stats.MaxRtt.Seconds())
