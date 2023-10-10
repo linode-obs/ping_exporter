@@ -163,27 +163,43 @@ func PingHandler(w http.ResponseWriter, r *http.Request) {
 	pinger.Timeout = p.timeout
 	pinger.TTL = p.ttl
 
-	if p.protocol == "icmp" {
+	if p.packet == "icmp" {
 		pinger.SetPrivileged(true)
 	} else {
 		pinger.SetPrivileged(false)
 	}
 
-	if err := pinger.Run(); err != nil {
-		log.Error(err)
-		serveMetricsWithError(w, r, registry)
-		pingSuccessGauge.Set(0)
-		return
+	// TODO: document acceptable probe parameters
+	if p.protocol == "v6" || p.protocol == "6" || p.protocol == "ip6" {
+		pinger.SetNetwork("ip6")
+	} else {
+		pinger.SetNetwork("ip4")
 	}
 
-	stats := pinger.Statistics()
-	pingSuccessGauge.Set(1)
-	minGauge.Set(stats.MinRtt.Seconds())
-	avgGauge.Set(stats.AvgRtt.Seconds())
-	maxGauge.Set(stats.MaxRtt.Seconds())
-	stddevGauge.Set(float64(stats.StdDevRtt))
-	lossGauge.Set(stats.PacketLoss)
-	probeDurationGauge.Set(time.Since(start).Seconds())
+	pinger.OnRecv = func(pkt *probing.Packet) {
+		log.Debugf("%d bytes from %s: icmp_seq=%d time=%v ttl=%v\n",
+			pkt.Nbytes, pkt.IPAddr, pkt.Seq, pkt.Rtt, pkt.TTL)
+	}
 
+	pinger.OnDuplicateRecv = func(pkt *probing.Packet) {
+		log.Debugf("%d bytes from %s: icmp_seq=%d time=%v ttl=%v (DUP!)\n",
+			pkt.Nbytes, pkt.IPAddr, pkt.Seq, pkt.Rtt, pkt.TTL)
+	}
+
+	pinger.OnFinish = func(stats *probing.Statistics) {
+		pingSuccessGauge.Set(1)
+		minGauge.Set(stats.MinRtt.Seconds())
+		avgGauge.Set(stats.AvgRtt.Seconds())
+		maxGauge.Set(stats.MaxRtt.Seconds())
+		stddevGauge.Set(float64(stats.StdDevRtt))
+		lossGauge.Set(stats.PacketLoss)
+		probeDurationGauge.Set(time.Since(start).Seconds())
+	}
+
+	if err := pinger.Run(); err != nil {
+		log.Error("Failed to ping target host:", err)
+		pingSuccessGauge.Set(0)
+		serveMetricsWithError(w, r, registry)
+	}
 	serveMetricsWithError(w, r, registry)
 }

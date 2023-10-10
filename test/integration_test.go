@@ -62,7 +62,7 @@ func TestPingExporterProbeEndpoint(t *testing.T) {
 	server := setupTestServer()
 	defer server.Close()
 
-	resp, err := http.Get(server.URL + "/probe?target=127.0.0.1")
+	resp, err := http.Get(server.URL + "/probe?target=127.0.0.1&packet=udp") // UDP so this test can run un-privileged
 	if err != nil {
 		t.Fatalf("Failed to send GET request: %v", err)
 	}
@@ -77,7 +77,7 @@ func BenchmarkPingExporterProbeEndpoint(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		resp, err := http.Get(server.URL + "/probe?target=127.0.0.1")
+		resp, err := http.Get(server.URL + "/probe?target=127.0.0.1&packet=udp")
 		if err != nil {
 			b.Fatalf("Failed to send GET request: %v", err)
 		}
