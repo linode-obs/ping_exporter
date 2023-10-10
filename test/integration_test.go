@@ -70,3 +70,17 @@ func TestPingExporterProbeEndpoint(t *testing.T) {
 
 	validateResponse(t, resp, "ping_success 1")
 }
+
+func BenchmarkPingExporterProbeEndpoint(b *testing.B) {
+	server := setupTestServer()
+	defer server.Close()
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		resp, err := http.Get(server.URL + "/probe?target=127.0.0.1")
+		if err != nil {
+			b.Fatalf("Failed to send GET request: %v", err)
+		}
+		resp.Body.Close()
+	}
+}
