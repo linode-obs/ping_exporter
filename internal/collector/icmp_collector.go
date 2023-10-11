@@ -148,7 +148,8 @@ func PingHandler(w http.ResponseWriter, r *http.Request) {
 	registry := prometheus.NewRegistry()
 	registry.MustRegister(pingSuccessGauge, probeDurationGauge, minGauge, maxGauge, avgGauge, stddevGauge, lossGauge)
 
-	log.Debug("Request received with parameters ", p)
+	log.Debugf("Request received with parameters: target=%v, count=%v, size=%v, interval=%v, timeout=%v, ttl=%v, packet=%v",
+		p.target, p.count, p.size, p.interval, p.timeout, p.ttl, p.packet)
 
 	pinger := probing.New(p.target)
 
