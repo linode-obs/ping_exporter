@@ -150,12 +150,7 @@ func PingHandler(w http.ResponseWriter, r *http.Request) {
 
 	log.Debug("Request received with parameters ", p)
 
-	pinger, err := probing.NewPinger(p.target)
-	if err != nil {
-		log.Error(err)
-		serveMetricsWithError(w, r, registry)
-		return
-	}
+	pinger := probing.New(p.target)
 
 	pinger.Count = p.count
 	pinger.Size = p.size
