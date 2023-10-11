@@ -13,7 +13,7 @@ import (
 const (
 	version              = "0.1.0"
 	defaultLogLevel      = "info"
-	defaultListenAddress = ":9141"
+	defaultListenAddress = "0.0.0.0:9141"
 	defaultMetricsPath   = "/metrics"
 )
 
