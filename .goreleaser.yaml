@@ -1,0 +1,84 @@
+# This is an example .goreleaser.yml file with some sensible defaults.
+# Make sure to check the documentation at https://goreleaser.com
+before:
+  hooks:
+    - go mod tidy
+    - go test -v ./...
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+    ldflags:
+      - -X main.Version={{.Version}} -X main.Commit={{.Commit}} -X main.BuildDate={{ .CommitDate }}
+    main: ./cmd/main.go
+archives:
+  - name_template: >-
+      {{ .ProjectName }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else if eq .Arch "darwin" }}Darwin
+      {{- else if eq .Arch "linux" }}Linux
+      {{- else if eq .Arch "windows" }}Windows
+      {{- else }}{{ .Arch }}{{ end }}
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+dockers:
+  # build latest and specific tag version images
+  - image_templates:
+      - "ghcr.io/wbollock/{{.ProjectName}}:{{ .Tag }}"
+      - "ghcr.io/wbollock/{{.ProjectName}}:latest"
+    goos: linux
+    goarch: amd64
+    use: docker
+    build_flag_templates:
+    - "--pull"
+    - "--label=org.opencontainers.image.created={{.Date}}"
+    - "--label=org.opencontainers.image.title={{.ProjectName}}"
+    - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+    - "--label=org.opencontainers.image.version={{.Version}}"
+    - "--label=org.opencontainers.image.source=https://github.com/wbollock/ping_exporter"
+    - "--label=org.opencontainers.image.description='Yet another prometheus ping exporter'"
+    - "--label=org.opencontainers.image.licenses=MIT"
+nfpms:
+  -  id: default
+     formats:
+      - deb
+      - rpm
+     package_name: "prometheus-ping-exporter"
+     section: "default"
+     priority: "extra"
+     replaces: []
+     dependencies: []
+     recommends: []
+     suggests: []
+     conflicts: []
+     maintainer: "Will Bollock <wbollock@gmail.com>"
+     description: |
+       Yet another prometheus ping exporter with support
+       for the multi-target export pattern.
+     homepage: "https://github.com/wbollock/ping_exporter"
+     license: "MIT"
+     contents:
+     # provided by goreleaser
+     - src: ./dist/ping_exporter_linux_amd64_v1/ping_exporter
+       dst: /usr/local/bin/prometheus-ping-exporter
+     - src: ./nfpm/systemd/prometheus-ping-exporter.service
+       dst: /etc/systemd/system/prometheus-ping-exporter.service
+       type: config
+     - src: ./nfpm/etc/default/prometheus-ping-exporter
+       dst: /etc/default/prometheus-ping-exporter
+       type: config
+     scripts:
+        postinstall: ./nfpm/scripts/postinstall.sh

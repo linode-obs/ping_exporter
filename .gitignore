@@ -20,3 +20,6 @@ ping-exporter
 
 # Go workspace file
 go.work
+
+# goreleaser
+dist/

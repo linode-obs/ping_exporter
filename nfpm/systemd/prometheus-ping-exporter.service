@@ -1,0 +1,16 @@
+[Unit]
+Description=Prometheus Ping Exporter
+Documentation=https://github.com/wbollock/ping_exporter
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+EnvironmentFile=-/etc/default/prometheus-ping-exporter
+User=root
+Group=root
+Type=simple
+ExecStart=/usr/local/bin/prometheus-ping-exporter $ARGS
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

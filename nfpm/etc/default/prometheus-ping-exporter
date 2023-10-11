@@ -1,0 +1,3 @@
+# Prometheus Ping Exporter default arguments
+# no default arguments needed
+ARGS=""
