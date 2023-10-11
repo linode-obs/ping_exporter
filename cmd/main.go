@@ -6,12 +6,13 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	"github.com/wbollock/ping_exporter/internal/server"
 )
 
 const (
-	version              = "0.1.0"
 	defaultLogLevel      = "info"
 	defaultListenAddress = "0.0.0.0:9141"
 	defaultMetricsPath   = "/metrics"
@@ -22,10 +23,27 @@ var (
 	showVersion   = flag.Bool("version", false, "show version information")
 	logLevel      = flag.String("log.level", defaultLogLevel,
 		"Minimum Log level [debug, info]")
+
+	// Build info for ping exporter itself, will be populated by linker during build
+	Version   string
+	BuildDate string
+	Commit    string
+
+	versionInfo = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "ping_exporter_version_info",
+			Help: "Ping Exporter build information",
+		},
+		[]string{"version", "commit", "builddate"},
+	)
 )
 
 func printVersion() {
-	fmt.Printf("ping_exporter\nVersion: %s\nmulti-target ICMP prometheus exporter\n", version)
+	fmt.Printf("ping_exporter\n")
+	fmt.Printf("Version:   %s\n", Version)
+	fmt.Printf("BuildDate: %s\n", BuildDate)
+	fmt.Printf("Commit:    %s\n", Commit)
+	fmt.Printf("multi-target ICMP prometheus exporter\n")
 }
 
 func main() {
@@ -36,6 +54,9 @@ func main() {
 		os.Exit(0)
 	}
 
+	versionInfo.WithLabelValues(Version, Commit, BuildDate).Set(1)
+	prometheus.MustRegister(versionInfo)
+
 	switch *logLevel {
 	case "debug":
 		log.SetLevel(log.DebugLevel)
@@ -44,10 +65,11 @@ func main() {
 		log.SetLevel(log.InfoLevel)
 	}
 
-	handler := server.SetupServer()
+	http.Handle(defaultMetricsPath, promhttp.Handler())
+	http.Handle("/", server.SetupServer())
 
 	log.Infof("Starting server on %s", *listenAddress)
-	if err := http.ListenAndServe(*listenAddress, handler); err != nil {
+	if err := http.ListenAndServe(*listenAddress, nil); err != nil {
 		log.WithError(err).Fatal("Failed to start the server")
 	}
 }
