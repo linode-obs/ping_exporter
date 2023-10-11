@@ -116,7 +116,7 @@ func parseParams(r *http.Request) pingParams {
 			} else {
 				p.ttl = defaultTTL
 			}
-		case "protocol":
+		case "protocol", "prot":
 			if strings.ToLower(v[0]) != "" {
 				p.protocol = strings.ToLower(v[0])
 			} else {
