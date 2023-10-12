@@ -71,6 +71,20 @@ func TestPingExporterProbeEndpoint(t *testing.T) {
 	validateResponse(t, resp, "ping_success 1")
 }
 
+func TestPingExporterProbeTimeout(t *testing.T) {
+	server := setupTestServer()
+	defer server.Close()
+
+	// this request should always timeout without succeeding
+	resp, err := http.Get(server.URL + "/probe?target=localhost&packet=udp&timeout=1s&count=1000")
+	if err != nil {
+		t.Fatalf("Failed to send GET request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	validateResponse(t, resp, "ping_success 0")
+}
+
 func BenchmarkPingExporterProbeEndpoint(b *testing.B) {
 	server := setupTestServer()
 	defer server.Close()

@@ -147,6 +147,7 @@ func PingHandler(w http.ResponseWriter, r *http.Request) {
 
 	registry := prometheus.NewRegistry()
 	registry.MustRegister(pingSuccessGauge, probeDurationGauge, minGauge, maxGauge, avgGauge, stddevGauge, lossGauge)
+	pingSuccessGauge.Set(0) // assume failure
 
 	log.Debugf("Request received with parameters: target=%v, count=%v, size=%v, interval=%v, timeout=%v, ttl=%v, packet=%v",
 		p.target, p.count, p.size, p.interval, p.timeout, p.ttl, p.packet)
@@ -165,7 +166,6 @@ func PingHandler(w http.ResponseWriter, r *http.Request) {
 		pinger.SetPrivileged(false)
 	}
 
-	// TODO: document acceptable probe parameters
 	if p.protocol == "v6" || p.protocol == "6" || p.protocol == "ip6" {
 		pinger.SetNetwork("ip6")
 	} else {
@@ -183,7 +183,12 @@ func PingHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	pinger.OnFinish = func(stats *probing.Statistics) {
-		pingSuccessGauge.Set(1)
+		if pinger.Count == pinger.PacketsSent {
+			// no error will be raised if we reach a timeout
+			// but if we managed to send as many packets as intended, declare success
+			// https://github.com/prometheus-community/pro-bing/issues/70
+			pingSuccessGauge.Set(1)
+		}
 		minGauge.Set(stats.MinRtt.Seconds())
 		avgGauge.Set(stats.AvgRtt.Seconds())
 		maxGauge.Set(stats.MaxRtt.Seconds())
@@ -194,7 +199,6 @@ func PingHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err := pinger.Run(); err != nil {
 		log.Error("Failed to ping target host:", err)
-		pingSuccessGauge.Set(0)
 		serveMetricsWithError(w, r, registry)
 	}
 	serveMetricsWithError(w, r, registry)
