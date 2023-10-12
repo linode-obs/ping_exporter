@@ -21,7 +21,7 @@ const (
 	defaultTTL      = 64
 	defaultProtocol = "ip4"  // or ip6
 	defaultPacket   = "icmp" // or udp
-	maxPacketSize   = 1024
+	maxPacketSize   = 65507
 	minPacketSize   = 24
 )
 
