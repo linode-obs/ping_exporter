@@ -13,6 +13,12 @@ This ping exporter is simple and fills a gap in the ping exporter market just by
 - [Prometheus Ping Exporter](#prometheus-ping-exporter)
   - [Parameters](#parameters)
   - [Metrics](#metrics)
+  - [Example Scrape Job](#example-scrape-job)
+  - [Installation](#installation)
+    - [Debian/RPM package](#debianrpm-package)
+    - [Docker](#docker)
+    - [Binary](#binary)
+    - [Source](#source)
   - [Other Ping Exporters](#other-ping-exporters)
   - [Contributors](#contributors)
 
@@ -40,6 +46,84 @@ This ping exporter is simple and fills a gap in the ping exporter market just by
 | ping_rtt_min_seconds   | gauge | Best round trip time                                   |
 | ping_rtt_std_deviation | gauge | Standard deviation                                     |
 | ping_success           | gauge | Returns whether the ping succeeded                     |
+
+## Example Scrape Job
+
+```yaml
+scrape_configs:
+  - job_name: 'ping_exporter_metrics'
+    scrape_interval: 15s
+    scrape_timeout: 15s
+    static_configs:
+      - targets: ['0.0.0.0:9141']
+
+  - job_name: 'prober'
+    metrics_path: '/probe'
+    scrape_interval: 15s
+    scrape_timeout: 15s
+    params:
+      protocol: ['4']
+      count: ['5']
+      interval: ['1s']
+    honor_labels: True
+    static_configs:
+    - targets:
+      - google.com
+      - linode.com
+    relabel_configs:
+    # Set the exporter's target
+    - source_labels: [__address__]
+      target_label: __param_target
+    # Set address label to instance
+    - source_labels: [__address__]
+      target_label: instance
+    # Actually talk to the blackbox exporter
+    - target_label: __address__
+      replacement: 0.0.0.0:9141
+    # If we set a custom instance label, write it to the
+    # expected instance label
+    - source_labels: [__instance]
+      target_label: instance
+      regex: '(.+)'
+      replacement: '${1}'
+```
+
+## Installation
+
+### Debian/RPM package
+
+Substitute `{{ version }}` for your desired release.
+
+```bash
+wget https://github.com/wbollock/ping_exporter/releases/download/v{{ version }}/prometheus-ping-exporter_{{ version }}_linux_amd64.{deb,rpm}
+{dpkg,rpm} -i prometheus-ping-exporter_{{ version }}_linux_amd64.{deb,rpm}
+```
+
+### Docker
+
+```console
+sudo docker run \
+--privileged \
+ghcr.io/wbollock/ping_exporter
+```
+
+### Binary
+
+```bash
+wget https://github.com/wbollock/ping_exporter/releases/download/v{{ version }}/ping_exporter_{{ version }}_Linux_x86_64.tar.gz
+tar xvf ping_exporter_{{ version }}_Linux_x86_64.tar.gz
+./ping_exporter/prometheus-ping-exporter
+```
+
+### Source
+
+```bash
+wget https://github.com/wbollock/ping_exporter/archive/refs/tags/v{{ version }}.tar.gz
+tar xvf ping_exporter-{{ version }}.tar.gz
+cd ./ping_exporter-{{ version }}
+go build ping_exporter.go
+./ping_exporter.go
+```
 
 ## Other Ping Exporters
 
