@@ -30,6 +30,10 @@ var (
 		Name: namespace + "success",
 		Help: "Returns whether the ping succeeded",
 	})
+	pingTimeoutGauge = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: namespace + "timeout",
+		Help: "Returns whether the ping failed by timeout",
+	})
 	probeDurationGauge = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: namespace + "duration_seconds",
 		Help: "Returns how long the probe took to complete in seconds",
@@ -146,8 +150,11 @@ func PingHandler(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 
 	registry := prometheus.NewRegistry()
-	registry.MustRegister(pingSuccessGauge, probeDurationGauge, minGauge, maxGauge, avgGauge, stddevGauge, lossGauge)
-	pingSuccessGauge.Set(0) // assume failure
+	registry.MustRegister(pingSuccessGauge, pingTimeoutGauge, probeDurationGauge, minGauge, maxGauge, avgGauge, stddevGauge, lossGauge)
+
+	// assume failure
+	pingSuccessGauge.Set(0)
+	pingTimeoutGauge.Set(1)
 
 	log.Debugf("Request received with parameters: target=%v, count=%v, size=%v, interval=%v, timeout=%v, ttl=%v, packet=%v",
 		p.target, p.count, p.size, p.interval, p.timeout, p.ttl, p.packet)
@@ -188,6 +195,7 @@ func PingHandler(w http.ResponseWriter, r *http.Request) {
 			// but if we managed to send as many packets as intended, declare success
 			// https://github.com/prometheus-community/pro-bing/issues/70
 			pingSuccessGauge.Set(1)
+			pingTimeoutGauge.Set(0)
 		}
 		minGauge.Set(stats.MinRtt.Seconds())
 		avgGauge.Set(stats.AvgRtt.Seconds())

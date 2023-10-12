@@ -17,7 +17,7 @@ func setupTestServer() *httptest.Server {
 	return httptest.NewServer(handler)
 }
 
-func validateResponse(t *testing.T, resp *http.Response, expectedBodyContent string) {
+func validateResponse(t *testing.T, resp *http.Response, expectedBodyContents ...string) {
 	if resp.StatusCode != expectedStatusCode {
 		t.Fatalf("Expected status %d, got: %d", expectedStatusCode, resp.StatusCode)
 	}
@@ -27,8 +27,10 @@ func validateResponse(t *testing.T, resp *http.Response, expectedBodyContent str
 		t.Fatalf("Failed to read body: %v", err)
 	}
 
-	if !strings.Contains(string(body), expectedBodyContent) {
-		t.Fatalf("Expected %s, got: %v", expectedBodyContent, string(body))
+	for _, content := range expectedBodyContents {
+		if !strings.Contains(string(body), content) {
+			t.Fatalf("Expected to find %s in response, but not found. Full content: %v", content, string(body))
+		}
 	}
 }
 
@@ -68,7 +70,7 @@ func TestPingExporterProbeEndpoint(t *testing.T) {
 	}
 	defer resp.Body.Close()
 
-	validateResponse(t, resp, "ping_success 1")
+	validateResponse(t, resp, "ping_success 1", "ping_timeout 0")
 }
 
 func TestPingExporterProbeTimeout(t *testing.T) {
@@ -82,7 +84,7 @@ func TestPingExporterProbeTimeout(t *testing.T) {
 	}
 	defer resp.Body.Close()
 
-	validateResponse(t, resp, "ping_success 0")
+	validateResponse(t, resp, "ping_success 0", "ping_timeout 1")
 }
 
 func BenchmarkPingExporterProbeEndpoint(b *testing.B) {
