@@ -13,6 +13,8 @@ This ping exporter is simple and fills a gap in the ping exporter market just by
 - [Prometheus Ping Exporter](#prometheus-ping-exporter)
   - [Parameters](#parameters)
   - [Metrics](#metrics)
+    - [/probe](#probe)
+    - [/metrics](#metrics-1)
   - [Example Scrape Job](#example-scrape-job)
   - [Installation](#installation)
     - [Debian/RPM package](#debianrpm-package)
@@ -37,6 +39,8 @@ This ping exporter is simple and fills a gap in the ping exporter market just by
 
 ## Metrics
 
+### /probe
+
 | Metric Name            | Type  | Description                                            |
 | ---------------------- | ----- | ------------------------------------------------------ |
 | ping_duration_seconds  | gauge | Returns how long the probe took to complete in seconds |
@@ -46,6 +50,10 @@ This ping exporter is simple and fills a gap in the ping exporter market just by
 | ping_rtt_min_seconds   | gauge | Best round trip time                                   |
 | ping_rtt_std_deviation | gauge | Standard deviation                                     |
 | ping_success           | gauge | Returns whether the ping succeeded                     |
+
+### /metrics
+
+Standard Prometheus webserver metrics, plus `ping_exporter_version_info`.
 
 ## Example Scrape Job
 
