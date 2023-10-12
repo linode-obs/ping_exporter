@@ -1,4 +1,3 @@
-# This is an example .goreleaser.yml file with some sensible defaults.
 # Make sure to check the documentation at https://goreleaser.com
 before:
   hooks:
@@ -11,6 +10,9 @@ builds:
       - linux
       - windows
       - darwin
+    goarch:
+      - amd64
+      - arm64
     ldflags:
       - -X main.Version={{.Version}} -X main.Commit={{.Commit}} -X main.BuildDate={{ .CommitDate }}
     main: ./cmd/main.go
@@ -36,12 +38,14 @@ changelog:
       - '^test:'
 dockers:
   # build latest and specific tag version images
+  # https://goreleaser.com/cookbooks/multi-platform-docker-images/#other-things-to-pay-attention-to
   - image_templates:
       - "ghcr.io/wbollock/{{.ProjectName}}:{{ .Tag }}"
-      - "ghcr.io/wbollock/{{.ProjectName}}:latest"
+      - "ghcr.io/wbollock/{{.ProjectName}}:{{ .Tag }}-amd64"
+      - "ghcr.io/wbollock/{{.ProjectName}}:latest" # keep latest as linux/amd64
+    use: buildx
     goos: linux
     goarch: amd64
-    use: docker
     build_flag_templates:
     - "--pull"
     - "--label=org.opencontainers.image.created={{.Date}}"
@@ -51,6 +55,22 @@ dockers:
     - "--label=org.opencontainers.image.source=https://github.com/wbollock/ping_exporter"
     - "--label=org.opencontainers.image.description='Yet another prometheus ping exporter'"
     - "--label=org.opencontainers.image.licenses=MIT"
+    - "--platform=linux/amd64"
+  - image_templates:
+      - "ghcr.io/wbollock/{{.ProjectName}}:{{ .Tag }}-linux-arm64"
+    use: buildx
+    goos: linux
+    goarch: arm64
+    build_flag_templates:
+    - "--pull"
+    - "--label=org.opencontainers.image.created={{.Date}}"
+    - "--label=org.opencontainers.image.title={{.ProjectName}}"
+    - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+    - "--label=org.opencontainers.image.version={{.Version}}"
+    - "--label=org.opencontainers.image.source=https://github.com/wbollock/ping_exporter"
+    - "--label=org.opencontainers.image.description='Yet another prometheus ping exporter'"
+    - "--label=org.opencontainers.image.licenses=MIT"
+    - "--platform=linux/arm64"
 nfpms:
   -  id: default
      formats:
