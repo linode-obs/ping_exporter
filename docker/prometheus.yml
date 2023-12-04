@@ -1,0 +1,39 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'ping-exporter-health'
+    static_configs:
+      - targets: ["prometheus-ping-exporter:9141"]
+  - job_name: 'prober'
+    metrics_path: '/probe'
+    scrape_interval: 15s
+    scrape_timeout: 15s
+    params:
+      prot: ['4']
+      count: ['5']
+      interval: ['1s']
+      packet: ['udp']
+      timeout: ['10s']
+    honor_labels: True
+    static_configs:
+    - targets:
+      - google.com
+      - linode.com
+      - wboll.dev
+    relabel_configs:
+    # Set the exporter's target
+    - source_labels: [__address__]
+      target_label: __param_target
+    # Set address label to instance
+    - source_labels: [__address__]
+      target_label: instance
+    # Actually talk to the blackbox exporter though
+    - target_label: __address__
+      replacement: prometheus-ping-exporter:9141
+    # If we set a custom instance label, write it to the
+    # expected instance label
+    - source_labels: [__instance]
+      target_label: instance
+      regex: '(.+)'
+      replacement: '${1}'
