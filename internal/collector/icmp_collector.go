@@ -1,6 +1,7 @@
 package collector
 
 import (
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -190,9 +191,13 @@ func PingHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	pinger.OnFinish = func(stats *probing.Statistics) {
-		if pinger.Count == pinger.PacketsSent {
+		log.Debugf("OnFinish: PacketsSent=%d, PacketsRecv=%d, PacketLoss=%f%%, MinRtt=%v, AvgRtt=%v, MaxRtt=%v, StdDevRtt=%v, Duration=%v",
+			pinger.PacketsSent, pinger.PacketsRecv, stats.PacketLoss, stats.MinRtt, stats.AvgRtt, stats.MaxRtt, stats.StdDevRtt, time.Since(start))
+
+		const tolerance = 0.001 // tolerance for easier floating point comparisons
+		// success declared if we sent as many packets as intended, we got back all packets sent, and packet loss is not equal to 100%
+		if pinger.Count == pinger.PacketsRecv && math.Abs(stats.PacketLoss-100) > tolerance {
 			// no error will be raised if we reach a timeout
-			// but if we managed to send as many packets as intended, declare success
 			// https://github.com/prometheus-community/pro-bing/issues/70
 			pingSuccessGauge.Set(1)
 			pingTimeoutGauge.Set(0)

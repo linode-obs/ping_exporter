@@ -1,0 +1,25 @@
+version: "3.3"
+networks:
+  prometheus-ping-exporter:
+services:
+  prometheus-ping-exporter:
+    build:
+      dockerfile: Dockerfile
+    command:
+      - --log.level=debug
+    networks:
+      - prometheus-ping-exporter
+    ports:
+      - 9141:9141
+    restart: always
+    # privileged: true
+    # icmp doesnt work well with this compose stack
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - prometheus-ping-exporter
+    restart: always

@@ -22,6 +22,7 @@ This ping exporter is simple and fills a gap in the ping exporter market just by
     - [Binary](#binary)
     - [Source](#source)
   - [Other Ping Exporters](#other-ping-exporters)
+  - [Releasing](#releasing)
   - [Contributors](#contributors)
 
 ## Parameters
@@ -41,16 +42,16 @@ This ping exporter is simple and fills a gap in the ping exporter market just by
 
 ### /probe
 
-| Metric Name            | Type  | Description                                            |
-| ---------------------- | ----- | ------------------------------------------------------ |
-| ping_duration_seconds  | gauge | Returns how long the probe took to complete in seconds |
-| ping_loss_ratio        | gauge | Packet loss from 0 to 100                              |
-| ping_rtt_avg_seconds   | gauge | Mean round trip time                                   |
-| ping_rtt_max_seconds   | gauge | Worst round trip time                                  |
-| ping_rtt_min_seconds   | gauge | Best round trip time                                   |
-| ping_rtt_std_deviation | gauge | Standard deviation                                     |
-| ping_success           | gauge | Returns whether the ping succeeded                     |
-| ping_timeout           | gauge | Returns whether the ping failed by timeout             |
+| Metric Name            | Type  | Description                                                                   |
+| ---------------------- | ----- | ----------------------------------------------------------------------------- |
+| ping_duration_seconds  | gauge | Returns how long the probe took to complete in seconds                        |
+| ping_loss_ratio        | gauge | Packet loss from 0 to 100                                                     |
+| ping_rtt_avg_seconds   | gauge | Mean round trip time                                                          |
+| ping_rtt_max_seconds   | gauge | Worst round trip time                                                         |
+| ping_rtt_min_seconds   | gauge | Best round trip time                                                          |
+| ping_rtt_std_deviation | gauge | Standard deviation                                                            |
+| ping_success           | gauge | Returns whether the ping succeeded (if any packet returns this is successful) |
+| ping_timeout           | gauge | Returns whether the ping failed by timeout                                    |
 
 ### /metrics
 
@@ -142,6 +143,13 @@ There are many other good ping exporters, please give them a look too:
 * [mtr-exporter by mgumz](https://github.com/mgumz/mtr-exporter)
 * [smokeping_prober by SuperQ](https://github.com/SuperQ/smokeping_prober)
 * [ping-exporter by knsd](https://github.com/knsd/ping-exporter)
+
+## Releasing
+
+1. Merge commits to main.
+2. Tag release `git tag -a v1.0.X -m "message"`
+3. `git push origin v1.0.X`
+4. `goreleaser release`
 
 ## Contributors
 
