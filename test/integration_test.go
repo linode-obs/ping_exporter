@@ -87,6 +87,19 @@ func TestPingExporterProbeTimeout(t *testing.T) {
 	validateResponse(t, resp, "ping_success 0", "ping_timeout 1")
 }
 
+func TestPingExporterDNSFailure(t *testing.T) {
+	server := setupTestServer()
+	defer server.Close()
+
+	resp, err := http.Get(server.URL + "/probe?target=invalidhostnamethatdoesntresolve&packet=udp&count=1&timeout=1s")
+	if err != nil {
+		t.Fatalf("Failed to send GET request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	validateResponse(t, resp, "ping_success 0")
+}
+
 func BenchmarkPingExporterProbeEndpoint(b *testing.B) {
 	server := setupTestServer()
 	defer server.Close()
