@@ -56,7 +56,6 @@ dockers:
     - "--label=org.opencontainers.image.description='Yet another prometheus ping exporter'"
     - "--label=org.opencontainers.image.licenses=MIT"
     - "--platform=linux/amd64"
-    dockerfile: "docker/Dockerfile"
   - image_templates:
       - "ghcr.io/wbollock/{{.ProjectName}}:{{ .Tag }}-linux-arm64"
     use: buildx
@@ -72,7 +71,6 @@ dockers:
     - "--label=org.opencontainers.image.description='Yet another prometheus ping exporter'"
     - "--label=org.opencontainers.image.licenses=MIT"
     - "--platform=linux/arm64"
-    dockerfile: "docker/Dockerfile"
 nfpms:
   -  id: default
      formats:

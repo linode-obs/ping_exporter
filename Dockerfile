@@ -4,7 +4,7 @@ FROM golang:alpine3.18 AS builderimage
 LABEL maintainer="Will Bollock <wbollock@gmail.com>"
 WORKDIR /go/src/ping-exporter
 COPY . .
-RUN go build -o ping-exporter ../cmd/main.go
+RUN go build -o ping-exporter cmd/main.go
 
 ###################################################################
 
