@@ -1,0 +1,10 @@
+# https://goreleaser.com/errors/docker-build/#do
+ARG ARCH="amd64"
+ARG OS="linux"
+FROM golang:alpine3.18 AS builderimage
+LABEL maintainer="Will Bollock <wbollock@gmail.com>"
+COPY ping_exporter /bin/ping_exporter
+
+EXPOSE      9141
+USER        nobody
+ENTRYPOINT  [ "./ping-exporter" ]
