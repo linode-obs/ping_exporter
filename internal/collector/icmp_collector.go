@@ -116,15 +116,6 @@ func PingHandler(registry *prometheus.Registry, pingSuccessGauge prometheus.Gaug
 		p := parseParams(r)
 		start := time.Now()
 
-		// TODO use atomic lock and reduce lock duration, dont think this is needed
-		mutex.Lock()
-
-		// assume failure
-		pingSuccessGauge.Set(0)
-		pingTimeoutGauge.Set(1)
-
-		mutex.Unlock()
-
 		log.Debugf("Request received with parameters: target=%v, count=%v, size=%v, interval=%v, timeout=%v, ttl=%v, packet=%v",
 			p.target, p.count, p.size, p.interval, p.timeout, p.ttl, p.packet)
 
@@ -152,7 +143,6 @@ func PingHandler(registry *prometheus.Registry, pingSuccessGauge prometheus.Gaug
 			log.Debugf("OnFinish: target=%v, PacketsSent=%d, PacketsRecv=%d, PacketLoss=%f%%, MinRtt=%v, AvgRtt=%v, MaxRtt=%v, StdDevRtt=%v, Duration=%v",
 				stats.IPAddr, pinger.PacketsSent, pinger.PacketsRecv, stats.PacketLoss, stats.MinRtt, stats.AvgRtt, stats.MaxRtt, stats.StdDevRtt, time.Since(start))
 
-			// lock while we attribute values to
 			mutex.Lock()
 			if pinger.PacketsRecv > 0 && pinger.Timeout > time.Since(start) {
 				log.Debugf("Ping successful: target=%v", stats.IPAddr)
