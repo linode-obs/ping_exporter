@@ -159,11 +159,11 @@ func PingHandler(registry *prometheus.Registry, pingSuccessGauge prometheus.Gaug
 				pingSuccessGauge.Set(1)
 				pingTimeoutGauge.Set(0)
 			} else if pinger.Timeout < time.Since(start) {
-				log.Debugf("Ping timeout: target=%v", stats.IPAddr)
+				log.Infof("Ping timeout: target=%v, timeout=%v, duration=%v", stats.IPAddr, pinger.Timeout, time.Since(start))
 				pingTimeoutGauge.Set(1)
 				pingSuccessGauge.Set(0)
 			} else if pinger.PacketsRecv == 0 {
-				log.Debugf("Ping failed, no packets received: target=%v", stats.IPAddr)
+				log.Infof("Ping failed, no packets received: target=%v, packetsRecv=%v, packetsSent=%v", stats.IPAddr, pinger.PacketsRecv, pinger.PacketsSent)
 				pingSuccessGauge.Set(0)
 				pingTimeoutGauge.Set(0)
 			}
