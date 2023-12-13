@@ -10,6 +10,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	"github.com/wbollock/ping_exporter/internal/collector"
+	"github.com/wbollock/ping_exporter/internal/metrics"
 )
 
 const (
@@ -67,8 +68,20 @@ func SetupServer() http.Handler {
 
 	var mutex sync.Mutex
 	registry := prometheus.NewRegistry()
-	registry.MustRegister(pingSuccessGauge, pingTimeoutGauge, probeDurationGauge, minGauge, maxGauge, avgGauge, stddevGauge, lossGauge)
-	mux.HandleFunc("/probe", collector.PingHandler(registry, pingSuccessGauge, pingTimeoutGauge, probeDurationGauge, minGauge, maxGauge, avgGauge, stddevGauge, lossGauge, &mutex))
+
+	metrics := metrics.PingMetrics{
+		PingSuccessGauge:   pingSuccessGauge,
+		PingTimeoutGauge:   pingTimeoutGauge,
+		ProbeDurationGauge: probeDurationGauge,
+		MinGauge:           minGauge,
+		MaxGauge:           maxGauge,
+		AvgGauge:           avgGauge,
+		StddevGauge:        stddevGauge,
+		LossGauge:          lossGauge,
+	}
+
+	registry.MustRegister(metrics.PingSuccessGauge, metrics.PingTimeoutGauge, metrics.ProbeDurationGauge, metrics.MinGauge, metrics.MaxGauge, metrics.AvgGauge, metrics.StddevGauge, metrics.LossGauge)
+	mux.HandleFunc("/probe", collector.PingHandler(registry, metrics, &mutex))
 
 	// for non-standard web servers, need to register handlers
 	mux.HandleFunc("/debug/pprof/", http.HandlerFunc(pprof.Index))

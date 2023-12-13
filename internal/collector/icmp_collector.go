@@ -11,6 +11,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
+	"github.com/wbollock/ping_exporter/internal/metrics"
 )
 
 const (
@@ -110,7 +111,7 @@ func serveMetricsWithError(w http.ResponseWriter, r *http.Request, registry *pro
 	}
 }
 
-func PingHandler(registry *prometheus.Registry, pingSuccessGauge prometheus.Gauge, pingTimeoutGauge prometheus.Gauge, probeDurationGauge prometheus.Gauge, minGauge prometheus.Gauge, maxGauge prometheus.Gauge, avgGauge prometheus.Gauge, stddevGauge prometheus.Gauge, lossGauge prometheus.Gauge, mutex *sync.Mutex) http.HandlerFunc {
+func PingHandler(registry *prometheus.Registry, metrics metrics.PingMetrics, mutex *sync.Mutex) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		p := parseParams(r)
@@ -146,24 +147,24 @@ func PingHandler(registry *prometheus.Registry, pingSuccessGauge prometheus.Gaug
 			mutex.Lock()
 			if pinger.PacketsRecv > 0 && pinger.Timeout > time.Since(start) {
 				log.Debugf("Ping successful: target=%v", stats.IPAddr)
-				pingSuccessGauge.Set(1)
-				pingTimeoutGauge.Set(0)
+				metrics.PingSuccessGauge.Set(1)
+				metrics.PingTimeoutGauge.Set(0)
 			} else if pinger.Timeout < time.Since(start) {
 				log.Infof("Ping timeout: target=%v, timeout=%v, duration=%v", stats.IPAddr, pinger.Timeout, time.Since(start))
-				pingTimeoutGauge.Set(1)
-				pingSuccessGauge.Set(0)
+				metrics.PingTimeoutGauge.Set(1)
+				metrics.PingSuccessGauge.Set(0)
 			} else if pinger.PacketsRecv == 0 {
 				log.Infof("Ping failed, no packets received: target=%v, packetsRecv=%v, packetsSent=%v", stats.IPAddr, pinger.PacketsRecv, pinger.PacketsSent)
-				pingSuccessGauge.Set(0)
-				pingTimeoutGauge.Set(0)
+				metrics.PingSuccessGauge.Set(0)
+				metrics.PingTimeoutGauge.Set(0)
 			}
 
-			minGauge.Set(stats.MinRtt.Seconds())
-			avgGauge.Set(stats.AvgRtt.Seconds())
-			maxGauge.Set(stats.MaxRtt.Seconds())
-			stddevGauge.Set(float64(stats.StdDevRtt))
-			lossGauge.Set(stats.PacketLoss)
-			probeDurationGauge.Set(time.Since(start).Seconds())
+			metrics.MinGauge.Set(stats.MinRtt.Seconds())
+			metrics.AvgGauge.Set(stats.AvgRtt.Seconds())
+			metrics.MaxGauge.Set(stats.MaxRtt.Seconds())
+			metrics.StddevGauge.Set(float64(stats.StdDevRtt))
+			metrics.LossGauge.Set(stats.PacketLoss)
+			metrics.ProbeDurationGauge.Set(time.Since(start).Seconds())
 			mutex.Unlock()
 		}
 
