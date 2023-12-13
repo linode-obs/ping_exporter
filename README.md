@@ -1,5 +1,11 @@
 # Prometheus Ping Exporter
 
+![Github Release Downloads](https://img.shields.io/github/downloads/wbollock/ping_exporter/total.svg)
+[![license](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/wbollock/ping_exporter/blob/master/LICENSE)
+[![golangci-lint](https://github.com/wbollock/ping_exporter/actions/workflows/golangci-lint.yaml/badge.svg)](https://github.com/wbollock/ping_exporter/actions/workflows/golangci-lint.yaml)
+![Go Report Card](https://goreportcard.com/badge/github.com/wbollock/ping_exporter)
+[![contributions](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat")](https://github.com/wbollock/ping_exporter/issues)
+
 Yet another ping exporter.
 
 Features:
