@@ -13,55 +13,56 @@ import (
 	"github.com/wbollock/ping_exporter/internal/metrics"
 )
 
-const (
-	defaultHTML = `<html>
-			<head><title>Ping Exporter</title></head>
-			<body>
-			<h1>Ping Exporter</h1>
-			<p><a href='%s'>Metrics</a></p>
-			</body>
-			</html>`
-	defaultMetricsPath = "/metrics"
-)
-
-const namespace = "ping_"
-
-var (
-	pingSuccessGauge = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: namespace + "success",
-		Help: "Returns whether the ping succeeded",
-	})
-	pingTimeoutGauge = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: namespace + "timeout",
-		Help: "Returns whether the ping failed by timeout",
-	})
-	probeDurationGauge = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: namespace + "duration_seconds",
-		Help: "Returns how long the probe took to complete in seconds",
-	})
-	minGauge = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: namespace + "rtt_min_seconds",
-		Help: "Best round trip time",
-	})
-	maxGauge = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: namespace + "rtt_max_seconds",
-		Help: "Worst round trip time",
-	})
-	avgGauge = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: namespace + "rtt_avg_seconds",
-		Help: "Mean round trip time",
-	})
-	stddevGauge = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: namespace + "rtt_std_deviation",
-		Help: "Standard deviation",
-	})
-	lossGauge = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: namespace + "loss_ratio",
-		Help: "Packet loss from 0 to 100",
-	})
-)
-
 func SetupServer() http.Handler {
+
+	const (
+		defaultHTML = `<html>
+				<head><title>Ping Exporter</title></head>
+				<body>
+				<h1>Ping Exporter</h1>
+				<p><a href='%s'>Metrics</a></p>
+				</body>
+				</html>`
+		defaultMetricsPath = "/metrics"
+	)
+
+	const namespace = "ping_"
+
+	var (
+		pingSuccessGauge = prometheus.NewGauge(prometheus.GaugeOpts{
+			Name: namespace + "success",
+			Help: "Returns whether the ping succeeded",
+		})
+		pingTimeoutGauge = prometheus.NewGauge(prometheus.GaugeOpts{
+			Name: namespace + "timeout",
+			Help: "Returns whether the ping failed by timeout",
+		})
+		probeDurationGauge = prometheus.NewGauge(prometheus.GaugeOpts{
+			Name: namespace + "duration_seconds",
+			Help: "Returns how long the probe took to complete in seconds",
+		})
+		minGauge = prometheus.NewGauge(prometheus.GaugeOpts{
+			Name: namespace + "rtt_min_seconds",
+			Help: "Best round trip time",
+		})
+		maxGauge = prometheus.NewGauge(prometheus.GaugeOpts{
+			Name: namespace + "rtt_max_seconds",
+			Help: "Worst round trip time",
+		})
+		avgGauge = prometheus.NewGauge(prometheus.GaugeOpts{
+			Name: namespace + "rtt_avg_seconds",
+			Help: "Mean round trip time",
+		})
+		stddevGauge = prometheus.NewGauge(prometheus.GaugeOpts{
+			Name: namespace + "rtt_std_deviation",
+			Help: "Standard deviation",
+		})
+		lossGauge = prometheus.NewGauge(prometheus.GaugeOpts{
+			Name: namespace + "loss_ratio",
+			Help: "Packet loss from 0 to 100",
+		})
+	)
+
 	mux := http.NewServeMux()
 
 	mux.Handle(defaultMetricsPath, promhttp.Handler())
