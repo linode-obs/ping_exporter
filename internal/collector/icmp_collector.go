@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	probing "github.com/prometheus-community/pro-bing"
@@ -12,18 +11,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	"github.com/wbollock/ping_exporter/internal/metrics"
-)
-
-const (
-	defaultTimeout  = time.Second * 10
-	defaultInterval = time.Second
-	defaultCount    = 5
-	defaultSize     = 56
-	defaultTTL      = 64
-	defaultProtocol = "ip4"  // or ip6
-	defaultPacket   = "icmp" // or udp
-	maxPacketSize   = 65507
-	minPacketSize   = 24
 )
 
 type pingParams struct {
@@ -39,6 +26,18 @@ type pingParams struct {
 
 func parseParams(r *http.Request) pingParams {
 	params := r.URL.Query()
+
+	const (
+		defaultTimeout  = time.Second * 10
+		defaultInterval = time.Second
+		defaultCount    = 5
+		defaultSize     = 56
+		defaultTTL      = 64
+		defaultProtocol = "ip4"  // or ip6
+		defaultPacket   = "icmp" // or udp
+		maxPacketSize   = 65507
+		minPacketSize   = 24
+	)
 
 	p := pingParams{
 		target:   params.Get("target"),
@@ -111,8 +110,61 @@ func serveMetricsWithError(w http.ResponseWriter, r *http.Request, registry *pro
 	}
 }
 
-func PingHandler(registry *prometheus.Registry, metrics metrics.PingMetrics, mutex *sync.Mutex) http.HandlerFunc {
+func PingHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+
+		const (
+			namespace = "ping_"
+		)
+
+		var (
+			pingSuccessGauge = prometheus.NewGauge(prometheus.GaugeOpts{
+				Name: namespace + "success",
+				Help: "Returns whether the ping succeeded",
+			})
+			pingTimeoutGauge = prometheus.NewGauge(prometheus.GaugeOpts{
+				Name: namespace + "timeout",
+				Help: "Returns whether the ping failed by timeout",
+			})
+			probeDurationGauge = prometheus.NewGauge(prometheus.GaugeOpts{
+				Name: namespace + "duration_seconds",
+				Help: "Returns how long the probe took to complete in seconds",
+			})
+			minGauge = prometheus.NewGauge(prometheus.GaugeOpts{
+				Name: namespace + "rtt_min_seconds",
+				Help: "Best round trip time",
+			})
+			maxGauge = prometheus.NewGauge(prometheus.GaugeOpts{
+				Name: namespace + "rtt_max_seconds",
+				Help: "Worst round trip time",
+			})
+			avgGauge = prometheus.NewGauge(prometheus.GaugeOpts{
+				Name: namespace + "rtt_avg_seconds",
+				Help: "Mean round trip time",
+			})
+			stddevGauge = prometheus.NewGauge(prometheus.GaugeOpts{
+				Name: namespace + "rtt_std_deviation",
+				Help: "Standard deviation",
+			})
+			lossGauge = prometheus.NewGauge(prometheus.GaugeOpts{
+				Name: namespace + "loss_ratio",
+				Help: "Packet loss from 0 to 100",
+			})
+		)
+
+		metrics := metrics.PingMetrics{
+			PingSuccessGauge:   pingSuccessGauge,
+			PingTimeoutGauge:   pingTimeoutGauge,
+			ProbeDurationGauge: probeDurationGauge,
+			MinGauge:           minGauge,
+			MaxGauge:           maxGauge,
+			AvgGauge:           avgGauge,
+			StddevGauge:        stddevGauge,
+			LossGauge:          lossGauge,
+		}
+		registry := prometheus.NewRegistry()
+
+		registry.MustRegister(metrics.PingSuccessGauge, metrics.PingTimeoutGauge, metrics.ProbeDurationGauge, metrics.MinGauge, metrics.MaxGauge, metrics.AvgGauge, metrics.StddevGauge, metrics.LossGauge)
 
 		p := parseParams(r)
 		start := time.Now()
@@ -144,7 +196,6 @@ func PingHandler(registry *prometheus.Registry, metrics metrics.PingMetrics, mut
 			log.Debugf("OnFinish: target=%v, PacketsSent=%d, PacketsRecv=%d, PacketLoss=%f%%, MinRtt=%v, AvgRtt=%v, MaxRtt=%v, StdDevRtt=%v, Duration=%v",
 				stats.IPAddr, pinger.PacketsSent, pinger.PacketsRecv, stats.PacketLoss, stats.MinRtt, stats.AvgRtt, stats.MaxRtt, stats.StdDevRtt, time.Since(start))
 
-			mutex.Lock()
 			if pinger.PacketsRecv > 0 && pinger.Timeout > time.Since(start) {
 				log.Debugf("Ping successful: target=%v", stats.IPAddr)
 				metrics.PingSuccessGauge.Set(1)
@@ -165,7 +216,6 @@ func PingHandler(registry *prometheus.Registry, metrics metrics.PingMetrics, mut
 			metrics.StddevGauge.Set(float64(stats.StdDevRtt))
 			metrics.LossGauge.Set(stats.PacketLoss)
 			metrics.ProbeDurationGauge.Set(time.Since(start).Seconds())
-			mutex.Unlock()
 		}
 
 		if err := pinger.Run(); err != nil {
