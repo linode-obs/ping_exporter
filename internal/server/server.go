@@ -10,22 +10,26 @@ import (
 	"github.com/wbollock/ping_exporter/internal/collector"
 )
 
-const (
-	defaultHTML = `<html>
-			<head><title>Ping Exporter</title></head>
-			<body>
-			<h1>Ping Exporter</h1>
-			<p><a href='%s'>Metrics</a></p>
-			</body>
-			</html>`
-	defaultMetricsPath = "/metrics"
-)
-
 func SetupServer() http.Handler {
+
+	const (
+		defaultHTML = `<html>
+				<head><title>Ping Exporter</title></head>
+				<body>
+				<h1>Ping Exporter</h1>
+				<p><a href='%s'>Metrics</a></p>
+				</body>
+				</html>`
+		defaultMetricsPath = "/metrics"
+	)
+
 	mux := http.NewServeMux()
 
 	mux.Handle(defaultMetricsPath, promhttp.Handler())
-	mux.HandleFunc("/probe", collector.PingHandler)
+
+	pingHandler := collector.PingHandler()
+
+	mux.HandleFunc("/probe", pingHandler)
 
 	// for non-standard web servers, need to register handlers
 	mux.HandleFunc("/debug/pprof/", http.HandlerFunc(pprof.Index))
