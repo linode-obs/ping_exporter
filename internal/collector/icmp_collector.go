@@ -114,41 +114,49 @@ func PingHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		const (
-			namespace = "ping_"
+			namespace = "ping"
 		)
 
 		var (
 			pingSuccessGauge = prometheus.NewGauge(prometheus.GaugeOpts{
-				Name: namespace + "success",
-				Help: "Returns whether the ping succeeded",
+				Namespace: namespace,
+				Name:      "success",
+				Help:      "Returns whether the ping succeeded",
 			})
 			pingTimeoutGauge = prometheus.NewGauge(prometheus.GaugeOpts{
-				Name: namespace + "timeout",
-				Help: "Returns whether the ping failed by timeout",
+				Namespace: namespace,
+				Name:      "timeout",
+				Help:      "Returns whether the ping failed by timeout",
 			})
 			probeDurationGauge = prometheus.NewGauge(prometheus.GaugeOpts{
-				Name: namespace + "duration_seconds",
-				Help: "Returns how long the probe took to complete in seconds",
+				Namespace: namespace,
+				Name:      "duration_seconds",
+				Help:      "Returns how long the probe took to complete in seconds",
 			})
 			minGauge = prometheus.NewGauge(prometheus.GaugeOpts{
-				Name: namespace + "rtt_min_seconds",
-				Help: "Best round trip time",
+				Namespace: namespace,
+				Name:      "rtt_min_seconds",
+				Help:      "Best round trip time",
 			})
 			maxGauge = prometheus.NewGauge(prometheus.GaugeOpts{
-				Name: namespace + "rtt_max_seconds",
-				Help: "Worst round trip time",
+				Namespace: namespace,
+				Name:      "rtt_max_seconds",
+				Help:      "Worst round trip time",
 			})
 			avgGauge = prometheus.NewGauge(prometheus.GaugeOpts{
-				Name: namespace + "rtt_avg_seconds",
-				Help: "Mean round trip time",
+				Namespace: namespace,
+				Name:      "rtt_avg_seconds",
+				Help:      "Mean round trip time",
 			})
 			stddevGauge = prometheus.NewGauge(prometheus.GaugeOpts{
-				Name: namespace + "rtt_std_deviation",
-				Help: "Standard deviation",
+				Namespace: namespace,
+				Name:      "rtt_std_deviation",
+				Help:      "Standard deviation",
 			})
 			lossGauge = prometheus.NewGauge(prometheus.GaugeOpts{
-				Name: namespace + "loss_ratio",
-				Help: "Packet loss from 0 to 100",
+				Namespace: namespace,
+				Name:      "loss_ratio",
+				Help:      "Packet loss from 0 to 100",
 			})
 		)
 
