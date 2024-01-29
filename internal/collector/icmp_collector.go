@@ -6,11 +6,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/linode_obs/ping_exporter/internal/metrics"
 	probing "github.com/prometheus-community/pro-bing"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
-	"github.com/wbollock/ping_exporter/internal/metrics"
 )
 
 type pingParams struct {

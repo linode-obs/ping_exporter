@@ -1,4 +1,4 @@
-module github.com/wbollock/ping_exporter
+module github.com/linode_obs/ping_exporter
 
 go 1.21.0
 

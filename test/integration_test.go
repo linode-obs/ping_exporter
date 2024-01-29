@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/wbollock/ping_exporter/internal/server"
+	"github.com/linode_obs/ping_exporter/internal/server"
 )
 
 const expectedStatusCode = 200
