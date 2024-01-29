@@ -1,10 +1,10 @@
 # Prometheus Ping Exporter
 
-![Github Release Downloads](https://img.shields.io/github/downloads/wbollock/ping_exporter/total.svg)
-[![license](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/wbollock/ping_exporter/blob/master/LICENSE)
-[![golangci-lint](https://github.com/wbollock/ping_exporter/actions/workflows/golangci-lint.yaml/badge.svg)](https://github.com/wbollock/ping_exporter/actions/workflows/golangci-lint.yaml)
-![Go Report Card](https://goreportcard.com/badge/github.com/wbollock/ping_exporter)
-[![contributions](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat")](https://github.com/wbollock/ping_exporter/issues)
+![Github Release Downloads](https://img.shields.io/github/downloads/linode_obs/ping_exporter/total.svg)
+[![license](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/linode_obs/ping_exporter/blob/master/LICENSE)
+[![golangci-lint](https://github.com/linode_obs/ping_exporter/actions/workflows/golangci-lint.yaml/badge.svg)](https://github.com/linode_obs/ping_exporter/actions/workflows/golangci-lint.yaml)
+![Go Report Card](https://goreportcard.com/badge/github.com/linode_obs/ping_exporter)
+[![contributions](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat")](https://github.com/linode_obs/ping_exporter/issues)
 
 Yet another ping exporter.
 
@@ -111,7 +111,7 @@ scrape_configs:
 Substitute `{{ version }}` for your desired release.
 
 ```bash
-wget https://github.com/wbollock/ping_exporter/releases/download/v{{ version }}/prometheus-ping-exporter_{{ version }}_linux_amd64.{deb,rpm}
+wget https://github.com/linode_obs/ping_exporter/releases/download/v{{ version }}/prometheus-ping-exporter_{{ version }}_linux_amd64.{deb,rpm}
 {dpkg,rpm} -i prometheus-ping-exporter_{{ version }}_linux_amd64.{deb,rpm}
 ```
 
@@ -120,13 +120,13 @@ wget https://github.com/wbollock/ping_exporter/releases/download/v{{ version }}/
 ```console
 sudo docker run \
 --privileged \
-ghcr.io/wbollock/ping_exporter
+ghcr.io/linode_obs/ping_exporter
 ```
 
 ### Binary
 
 ```bash
-wget https://github.com/wbollock/ping_exporter/releases/download/v{{ version }}/ping_exporter_{{ version }}_Linux_x86_64.tar.gz
+wget https://github.com/linode_obs/ping_exporter/releases/download/v{{ version }}/ping_exporter_{{ version }}_Linux_x86_64.tar.gz
 tar xvf ping_exporter_{{ version }}_Linux_x86_64.tar.gz
 ./ping_exporter/prometheus-ping-exporter
 ```
@@ -134,7 +134,7 @@ tar xvf ping_exporter_{{ version }}_Linux_x86_64.tar.gz
 ### Source
 
 ```bash
-wget https://github.com/wbollock/ping_exporter/archive/refs/tags/v{{ version }}.tar.gz
+wget https://github.com/linode_obs/ping_exporter/archive/refs/tags/v{{ version }}.tar.gz
 tar xvf ping_exporter-{{ version }}.tar.gz
 cd ./ping_exporter-{{ version }}
 go build ping_exporter.go

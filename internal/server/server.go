@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"net/http/pprof"
 
+	"github.com/linode_obs/ping_exporter/internal/collector"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
-	"github.com/wbollock/ping_exporter/internal/collector"
 )
 
 func SetupServer() http.Handler {

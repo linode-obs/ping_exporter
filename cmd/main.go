@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/linode_obs/ping_exporter/internal/server"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
-	"github.com/wbollock/ping_exporter/internal/server"
 )
 
 const (
