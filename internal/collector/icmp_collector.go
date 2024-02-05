@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/linode_obs/ping_exporter/internal/metrics"
+	"github.com/linode-obs/ping_exporter/internal/metrics"
 	probing "github.com/prometheus-community/pro-bing"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"

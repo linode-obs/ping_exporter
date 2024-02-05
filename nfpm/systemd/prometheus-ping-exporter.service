@@ -1,6 +1,6 @@
 [Unit]
 Description=Prometheus Ping Exporter
-Documentation=https://github.com/linode_obs/ping_exporter
+Documentation=https://github.com/linode-obs/ping_exporter
 Wants=network-online.target
 After=network-online.target
 

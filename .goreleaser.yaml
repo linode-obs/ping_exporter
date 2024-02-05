@@ -40,9 +40,9 @@ dockers:
   # build latest and specific tag version images
   # https://goreleaser.com/cookbooks/multi-platform-docker-images/#other-things-to-pay-attention-to
   - image_templates:
-      - "ghcr.io/linode_obs/{{.ProjectName}}:{{ .Tag }}"
-      - "ghcr.io/linode_obs/{{.ProjectName}}:{{ .Tag }}-amd64"
-      - "ghcr.io/linode_obs/{{.ProjectName}}:latest" # keep latest as linux/amd64
+      - "ghcr.io/linode-obs/{{.ProjectName}}:{{ .Tag }}"
+      - "ghcr.io/linode-obs/{{.ProjectName}}:{{ .Tag }}-amd64"
+      - "ghcr.io/linode-obs/{{.ProjectName}}:latest" # keep latest as linux/amd64
     use: buildx
     goos: linux
     goarch: amd64
@@ -52,13 +52,13 @@ dockers:
     - "--label=org.opencontainers.image.title={{.ProjectName}}"
     - "--label=org.opencontainers.image.revision={{.FullCommit}}"
     - "--label=org.opencontainers.image.version={{.Version}}"
-    - "--label=org.opencontainers.image.source=https://github.com/linode_obs/ping_exporter"
+    - "--label=org.opencontainers.image.source=https://github.com/linode-obs/ping_exporter"
     - "--label=org.opencontainers.image.description='Yet another prometheus ping exporter'"
     - "--label=org.opencontainers.image.licenses=MIT"
     - "--platform=linux/amd64"
     dockerfile: "Dockerfile_goreleaser"
   - image_templates:
-      - "ghcr.io/linode_obs/{{.ProjectName}}:{{ .Tag }}-linux-arm64"
+      - "ghcr.io/linode-obs/{{.ProjectName}}:{{ .Tag }}-linux-arm64"
     use: buildx
     goos: linux
     goarch: arm64
@@ -68,7 +68,7 @@ dockers:
     - "--label=org.opencontainers.image.title={{.ProjectName}}"
     - "--label=org.opencontainers.image.revision={{.FullCommit}}"
     - "--label=org.opencontainers.image.version={{.Version}}"
-    - "--label=org.opencontainers.image.source=https://github.com/linode_obs/ping_exporter"
+    - "--label=org.opencontainers.image.source=https://github.com/linode-obs/ping_exporter"
     - "--label=org.opencontainers.image.description='Yet another prometheus ping exporter'"
     - "--label=org.opencontainers.image.licenses=MIT"
     - "--platform=linux/arm64"
@@ -90,7 +90,7 @@ nfpms:
      description: |
        Yet another prometheus ping exporter with support
        for the multi-target export pattern.
-     homepage: "https://github.com/linode_obs/ping_exporter"
+     homepage: "https://github.com/linode-obs/ping_exporter"
      license: "MIT"
      contents:
      # provided by goreleaser

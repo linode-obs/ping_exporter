@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"net/http/pprof"
 
-	"github.com/linode_obs/ping_exporter/internal/collector"
+	"github.com/linode-obs/ping_exporter/internal/collector"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 )
