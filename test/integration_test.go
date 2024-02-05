@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/linode_obs/ping_exporter/internal/server"
+	"github.com/linode-obs/ping_exporter/internal/server"
 )
 
 const expectedStatusCode = 200
