@@ -221,7 +221,7 @@ func PingHandler() http.HandlerFunc {
 			metrics.MinGauge.Set(stats.MinRtt.Seconds())
 			metrics.AvgGauge.Set(stats.AvgRtt.Seconds())
 			metrics.MaxGauge.Set(stats.MaxRtt.Seconds())
-			metrics.StddevGauge.Set(float64(stats.StdDevRtt))
+			metrics.StddevGauge.Set(stats.StdDevRtt.Seconds())
 			metrics.LossGauge.Set(stats.PacketLoss)
 			metrics.ProbeDurationGauge.Set(time.Since(start).Seconds())
 		}
