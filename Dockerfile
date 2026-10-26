@@ -12,6 +12,9 @@ FROM golang:alpine3.18
 COPY --from=builderimage /go/src/ping-exporter/ping-exporter /app/
 WORKDIR /app
 
+RUN apk add --no-cache libcap
+RUN setcap cap_net_raw=+ep ./ping-exporter
+
 EXPOSE      9141
 USER        nobody
 ENTRYPOINT  [ "./ping-exporter" ]
