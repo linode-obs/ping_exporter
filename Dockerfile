@@ -1,6 +1,6 @@
 ARG ARCH="amd64"
 ARG OS="linux"
-FROM golang:alpine3.18 AS builderimage
+FROM golang:alpine AS builderimage
 LABEL maintainer="Will Bollock <wbollock@gmail.com>"
 WORKDIR /go/src/ping-exporter
 COPY . .
@@ -8,7 +8,7 @@ RUN go build -o ping-exporter cmd/main.go
 
 ###################################################################
 
-FROM golang:alpine3.18
+FROM golang:alpine
 COPY --from=builderimage /go/src/ping-exporter/ping-exporter /app/
 WORKDIR /app
 
