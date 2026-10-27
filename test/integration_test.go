@@ -17,6 +17,13 @@ func setupTestServer() *httptest.Server {
 	return httptest.NewServer(handler)
 }
 
+func closeResponseBody(t testing.TB, body io.Closer) {
+	t.Helper()
+	if err := body.Close(); err != nil {
+		t.Errorf("Failed to close response body: %v", err)
+	}
+}
+
 func validateResponse(t *testing.T, resp *http.Response, expectedBodyContents ...string) {
 	if resp.StatusCode != expectedStatusCode {
 		t.Fatalf("Expected status %d, got: %d", expectedStatusCode, resp.StatusCode)
@@ -42,7 +49,7 @@ func TestPingExporterRootEndpoint(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to send GET request: %v", err)
 	}
-	defer resp.Body.Close()
+	defer closeResponseBody(t, resp.Body)
 
 	validateResponse(t, resp, "<head><title>Ping Exporter</title></head>")
 }
@@ -55,7 +62,7 @@ func TestPingExporterMetricsEndpoint(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to send GET request: %v", err)
 	}
-	defer resp.Body.Close()
+	defer closeResponseBody(t, resp.Body)
 
 	validateResponse(t, resp, "promhttp_metric_handler_requests_in_flight 1")
 }
@@ -68,7 +75,7 @@ func TestPingExporterProbeEndpoint(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to send GET request: %v", err)
 	}
-	defer resp.Body.Close()
+	defer closeResponseBody(t, resp.Body)
 
 	validateResponse(t, resp, "ping_success 1", "ping_timeout 0")
 }
@@ -82,7 +89,7 @@ func TestPingExporterProbeTimeout(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to send GET request: %v", err)
 	}
-	defer resp.Body.Close()
+	defer closeResponseBody(t, resp.Body)
 
 	validateResponse(t, resp, "ping_success 0", "ping_timeout 1")
 }
@@ -95,7 +102,7 @@ func TestPingExporterDNSFailure(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to send GET request: %v", err)
 	}
-	defer resp.Body.Close()
+	defer closeResponseBody(t, resp.Body)
 
 	validateResponse(t, resp, "ping_success 0")
 }
@@ -110,6 +117,6 @@ func BenchmarkPingExporterProbeEndpoint(b *testing.B) {
 		if err != nil {
 			b.Fatalf("Failed to send GET request: %v", err)
 		}
-		resp.Body.Close()
+		closeResponseBody(b, resp.Body)
 	}
 }

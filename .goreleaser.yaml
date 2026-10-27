@@ -1,4 +1,5 @@
 # Make sure to check the documentation at https://goreleaser.com
+version: 2
 before:
   hooks:
     - go mod tidy
@@ -29,50 +30,13 @@ archives:
 checksum:
   name_template: 'checksums.txt'
 snapshot:
-  name_template: "{{ incpatch .Version }}-next"
+  version_template: "{{ incpatch .Version }}-next"
 changelog:
   sort: asc
   filters:
     exclude:
       - '^docs:'
       - '^test:'
-dockers:
-  # build latest and specific tag version images
-  # https://goreleaser.com/cookbooks/multi-platform-docker-images/#other-things-to-pay-attention-to
-  - image_templates:
-      - "ghcr.io/linode-obs/{{.ProjectName}}:{{ .Tag }}"
-      - "ghcr.io/linode-obs/{{.ProjectName}}:{{ .Tag }}-amd64"
-      - "ghcr.io/linode-obs/{{.ProjectName}}:latest" # keep latest as linux/amd64
-    use: buildx
-    goos: linux
-    goarch: amd64
-    build_flag_templates:
-    - "--pull"
-    - "--label=org.opencontainers.image.created={{.Date}}"
-    - "--label=org.opencontainers.image.title={{.ProjectName}}"
-    - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-    - "--label=org.opencontainers.image.version={{.Version}}"
-    - "--label=org.opencontainers.image.source=https://github.com/linode-obs/ping_exporter"
-    - "--label=org.opencontainers.image.description='Yet another prometheus ping exporter'"
-    - "--label=org.opencontainers.image.licenses=MIT"
-    - "--platform=linux/amd64"
-    dockerfile: "Dockerfile_goreleaser"
-  - image_templates:
-      - "ghcr.io/linode-obs/{{.ProjectName}}:{{ .Tag }}-linux-arm64"
-    use: buildx
-    goos: linux
-    goarch: arm64
-    build_flag_templates:
-    - "--pull"
-    - "--label=org.opencontainers.image.created={{.Date}}"
-    - "--label=org.opencontainers.image.title={{.ProjectName}}"
-    - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-    - "--label=org.opencontainers.image.version={{.Version}}"
-    - "--label=org.opencontainers.image.source=https://github.com/linode-obs/ping_exporter"
-    - "--label=org.opencontainers.image.description='Yet another prometheus ping exporter'"
-    - "--label=org.opencontainers.image.licenses=MIT"
-    - "--platform=linux/arm64"
-    dockerfile: "Dockerfile_goreleaser"
 nfpms:
   -  id: default
      formats:
