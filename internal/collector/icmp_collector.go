@@ -14,40 +14,43 @@ import (
 )
 
 type pingParams struct {
-	target   string
-	timeout  time.Duration
-	interval time.Duration
-	count    int
-	size     int
-	ttl      int
-	protocol string
-	packet   string
+	target          string
+	timeout         time.Duration
+	interval        time.Duration
+	count           int
+	size            int
+	ttl             int
+	protocol        string
+	packet          string
+	stop_on_success bool
 }
 
 func parseParams(r *http.Request) pingParams {
 	params := r.URL.Query()
 
 	const (
-		defaultTimeout  = time.Second * 10
-		defaultInterval = time.Second
-		defaultCount    = 5
-		defaultSize     = 56
-		defaultTTL      = 64
-		defaultProtocol = "ip4"  // or ip6
-		defaultPacket   = "icmp" // or udp
-		maxPacketSize   = 65507
-		minPacketSize   = 24
+		defaultTimeout       = time.Second * 10
+		defaultInterval      = time.Second
+		defaultCount         = 5
+		defaultSize          = 56
+		defaultTTL           = 64
+		defaultProtocol      = "ip4"  // or ip6
+		defaultPacket        = "icmp" // or udp
+		maxPacketSize        = 65507
+		minPacketSize        = 24
+		defaultStopOnSuccess = false
 	)
 
 	p := pingParams{
-		target:   params.Get("target"),
-		timeout:  defaultTimeout,
-		interval: defaultInterval,
-		count:    defaultCount,
-		size:     defaultSize,
-		ttl:      defaultTTL,
-		protocol: defaultProtocol,
-		packet:   defaultPacket,
+		target:          params.Get("target"),
+		timeout:         defaultTimeout,
+		interval:        defaultInterval,
+		count:           defaultCount,
+		size:            defaultSize,
+		ttl:             defaultTTL,
+		protocol:        defaultProtocol,
+		packet:          defaultPacket,
+		stop_on_success: defaultStopOnSuccess,
 	}
 
 	for k, v := range params {
@@ -97,8 +100,13 @@ func parseParams(r *http.Request) pingParams {
 			} else {
 				p.packet = defaultPacket
 			}
+		case "stop_on_success":
+			if strings.ToLower(v[0]) == "true" {
+				p.stop_on_success = true
+			} else {
+				p.stop_on_success = defaultStopOnSuccess
+			}
 		}
-
 	}
 
 	return p
@@ -177,8 +185,8 @@ func PingHandler() http.HandlerFunc {
 		p := parseParams(r)
 		start := time.Now()
 
-		log.Debugf("Request received with parameters: target=%v, count=%v, size=%v, interval=%v, timeout=%v, ttl=%v, packet=%v",
-			p.target, p.count, p.size, p.interval, p.timeout, p.ttl, p.packet)
+		log.Debugf("Request received with parameters: target=%v, count=%v, size=%v, interval=%v, timeout=%v, ttl=%v, packet=%v, stop_on_success=%v",
+			p.target, p.count, p.size, p.interval, p.timeout, p.ttl, p.packet, p.stop_on_success)
 
 		pinger := probing.New(p.target)
 
@@ -198,6 +206,14 @@ func PingHandler() http.HandlerFunc {
 			pinger.SetNetwork("ip6")
 		} else {
 			pinger.SetNetwork("ip4")
+		}
+
+		if p.stop_on_success {
+			pinger.OnRecv = func(pkt *probing.Packet) {
+				log.Debugf("OnRecv: target=%v, Seq=%d, RTT=%v", pkt.IPAddr, pkt.Seq, pkt.Rtt)
+				log.Debugf("Stopping ping on success for target=%v", pkt.IPAddr)
+				pinger.Stop()
+			}
 		}
 
 		pinger.OnFinish = func(stats *probing.Statistics) {
